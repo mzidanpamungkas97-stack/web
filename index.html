@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>A Little Love Story for You 💘</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&family=Quicksand:wght@500;700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <div id="bg"></div>
+  <canvas id="fx"></canvas>
+
+  <!-- Tombol musik + equalizer -->
+  <button id="mbtn" aria-label="Putar atau jeda musik">
+    <span class="eq"><i></i><i></i><i></i></span><span id="mt"></span>
+  </button>
+
+  <!-- 1. Halaman pembuka -->
+  <section id="intro" class="scr">
+    <p class="small">untuk <b id="nm"></b></p>
+    <h1>Happy Birthday, My Favorite Person! 💗</h1>
+    <p class="small">I made something special just for you…</p>
+    <button id="open" class="env"><span>💌</span>Buka Kejutan</button>
+  </section>
+
+  <!-- 2. Panah cinta -->
+  <section id="main" class="scr" hidden>
+    <h2>A Little Love Story for You 💘</h2>
+    <p id="hint" class="small"></p>
+    <canvas id="game"></canvas>
+  </section>
+
+  <!-- 3. Video kenangan & ucapan (muncul langsung setelah panah kena target) -->
+  <div id="mem" class="modal" role="dialog" aria-modal="true" aria-label="Vidio Ucapan Ulang Tahun">
+    <div class="pol">
+      <div class="pol-badge">🎬 Vidio Spesial Untukmu 💖</div>
+      <div class="vw">
+        <video id="vid" controls playsinline preload="auto"></video>
+        <div id="vph" class="ph" hidden>
+          <div class="vph-content">
+            <div class="vph-icon">🎥✨</div>
+            <h3>Vidio Ucapan Spesial</h3>
+            <p>Taruh file videomu di: <code>assets/video-kenangan.mp4</code></p>
+            <label class="btn vph-upload-btn" for="vid-file-input">
+              📁 Pilih / Tes File Video Sekarang
+              <input type="file" id="vid-file-input" accept="video/*" style="display:none">
+            </label>
+            <p class="vph-note">File yang dipilih langsung diputar secara otomatis di sini</p>
+          </div>
+        </div>
+      </div>
+      <div class="pol-footer">
+        <p class="cap">Setiap detik bersamamu adalah kenangan terindahku. ❤️</p>
+        <div class="modal-actions">
+          <button id="play" class="btn btn-secondary">Putar Ulang Video ▶</button>
+          <button id="next" class="btn">Lanjut ke Surat Cinta 💌</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. Pesan + fitur tambahan + galeri -->
+  <section id="after" class="scr" hidden>
+    <div id="msg" class="card"></div>
+    <div class="row">
+      <button id="again" class="btn">Ulangi Panah Cinta 🏹</button>
+    </div>
+    <div id="gal" class="gal"></div>
+  </section>
+
+  <div id="toast"></div>
+  <script src="script.js"></script>
+</body>
+
+</html>
