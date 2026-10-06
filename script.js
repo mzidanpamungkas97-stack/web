@@ -1,6 +1,6 @@
 /* ============ KONFIGURASI — edit bagian ini saja ============ */
 const CFG = {
-  nama: "Sayang",                                  // nama pasanganmu
+  nama: "wiwik A.K.A najwa fahraliya",                                  // nama pasanganmu
   judulLagu: "Judul Lagu Kita – Nama Artis",       // tampil di tombol musik
   video: "assets/video-kenangan.mp4?v=20261006_720p",
   musik: "assets/lagu-kita.mp3",
