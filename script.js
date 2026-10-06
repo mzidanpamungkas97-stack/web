@@ -2,7 +2,7 @@
 const CFG = {
   nama: "Sayang",                                  // nama pasanganmu
   judulLagu: "Judul Lagu Kita – Nama Artis",       // tampil di tombol musik
-  video: "assets/video-kenangan.mp4",
+  video: "assets/video-kenangan.mp4?v=20261006_720p",
   musik: "assets/lagu-kita.mp3",
   foto: ["assets/foto-1.jpg", "assets/foto-2.jpg", "assets/foto-3.jpg"],
   pesan: `Happy birthday, najwa fahraliya! ❤️
@@ -357,38 +357,9 @@ music.onpause = () => mbtn.classList.remove('on');
 music.onerror = () => { $('#mt').textContent = '🎵 (taruh lagu di ' + CFG.musik + ')'; };
 mbtn.onclick = () => music.paused ? music.play().catch(() => { }) : music.pause();
 
-/* ============ Video kenangan & ucapan (Audio Gain Boost & Optimasi Ponsel) ============ */
+/* ============ Video kenangan & ucapan (Optimasi Performa Hardware HP) ============ */
 const vid = $('#vid'), vph = $('#vph'), playBtn = $('#play');
 const vidPlayOverlay = $('#vid-play-overlay'), vidSpinner = $('#vid-spinner');
-
-// Web Audio API Gain Booster (Menaikkan gain suara video)
-let audioCtx = null;
-let videoGainNode = null;
-let videoSourceNode = null;
-
-function setupVideoAudioGain() {
-  try {
-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-    if (!AudioCtx) return;
-    if (!audioCtx) {
-      audioCtx = new AudioCtx();
-    }
-    if (audioCtx.state === 'suspended') {
-      audioCtx.resume().catch(() => {});
-    }
-    if (!videoSourceNode && vid) {
-      videoSourceNode = audioCtx.createMediaElementSource(vid);
-      videoGainNode = audioCtx.createGain();
-      // Gain boost 1.4x (+3 dB tambahan pada browser untuk suara lantang & jernih)
-      videoGainNode.gain.value = 1.4;
-      videoSourceNode.connect(videoGainNode);
-      videoGainNode.connect(audioCtx.destination);
-    }
-  } catch (err) {
-    // Tetap berjalan dengan audio standar jika browser membatasi perutean audio media
-    console.info('Audio gain fallback ke output standar:', err);
-  }
-}
 
 // Placeholder jika file video belum ada
 vid.onerror = () => {
@@ -399,7 +370,7 @@ vid.onerror = () => {
   if (vidSpinner) vidSpinner.hidden = true;
 };
 
-// Pasang video sumber dari konfigurasi
+// Pasang video sumber dari konfigurasi (audio sudah di-boost permanen +28dB di file)
 vid.src = CFG.video;
 
 // Buka input file video jika pengguna ingin memilih file video langsung
@@ -414,7 +385,6 @@ if (vidFileInput) {
       vph.hidden = true;
       playBtn.hidden = true;
       vid.currentTime = 0;
-      setupVideoAudioGain();
       vid.play().then(() => {
         if (music && !music.paused) music.volume = 0.05;
       }).catch(() => {
@@ -426,10 +396,6 @@ if (vidFileInput) {
 }
 
 function handlePlayVideo() {
-  setupVideoAudioGain();
-  if (audioCtx && audioCtx.state === 'suspended') {
-    audioCtx.resume().catch(() => {});
-  }
   const p = vid.play();
   if (p !== undefined) {
     p.then(() => {
@@ -460,8 +426,12 @@ vid.onplaying = () => {
 };
 
 vid.onplay = () => {
+  // Matikan hujan bunga & loop game agar ponsel fokus 100% pada pemutaran video
+  running = false;
   stopSustainedFlowerRain();
-  setupVideoAudioGain();
+  P = [];
+  if (fc) fc.clearRect(0, 0, innerWidth, innerHeight);
+
   playBtn.hidden = true;
   if (vidPlayOverlay) vidPlayOverlay.classList.add('hidden');
   if (music && !music.paused) music.volume = 0.05; // kecilkan musik latar agar ucapan video terdengar jelas & lantang
@@ -473,7 +443,6 @@ vid.onpause = () => {
     if (vidPlayOverlay) vidPlayOverlay.classList.remove('hidden');
   }
   if (music && !music.paused) music.volume = 0.6;
-  ensureFxRun();
 };
 
 vid.onended = () => {
@@ -481,19 +450,22 @@ vid.onended = () => {
   playBtn.textContent = 'Putar Ulang Video ↺';
   if (vidPlayOverlay) vidPlayOverlay.classList.remove('hidden');
   if (music && !music.paused) music.volume = 0.6;
-  ensureFxRun();
 };
 
 // TAMPILKAN MODAL VIDEO SECARA LANGSUNG
 function showVideoModal() {
   const mem = $('#mem');
   mem.classList.add('show');
-  startSustainedFlowerRain();
 
-  // Langsung putar video dengan boost audio
+  // HENTIKAN game canvas loop dan partikel background agar GPU ponsel 100% lancar tanpa lag
+  running = false;
+  stopSustainedFlowerRain();
+  P = [];
+  if (fc) fc.clearRect(0, 0, innerWidth, innerHeight);
+
+  // Langsung putar video dengan hardware decoding murni
   if (vid) {
     vid.currentTime = 0;
-    setupVideoAudioGain();
     const playPromise = vid.play();
     if (playPromise !== undefined) {
       playPromise.then(() => {
@@ -596,17 +568,19 @@ function draw(t) {
 }
 
 function hit() {                                    // kena target!
-  over = true; arrow.stuck = true; arrow.ox = arrow.x - tgt.x; arrow.oy = arrow.y - tgt.y;
+  over = true;
+  running = false;                                  // Matikan loop canvas game agar tidak membebani GPU saat video diputar
+  arrow.stuck = true; arrow.ox = arrow.x - tgt.x; arrow.oy = arrow.y - tgt.y;
   const r = cv.getBoundingClientRect();
   const hitX = r.left + tgt.x;
   const hitY = r.top + tgt.y;
 
   $('#hint').textContent = 'Tepat di hatiku! 💘';
 
-  // 1. Animasi bunga-bunga yang memenuhi seluruh layar
+  // 1. Animasi bunga-bunga mekar singkat
   flowerScreenBlast(hitX, hitY);
 
-  // 2. Langsung memunculkan video ucapan yang besar tanpa jeda (0 ms)
+  // 2. Langsung memunculkan video ucapan yang besar
   showVideoModal();
 }
 function missed() {
@@ -622,6 +596,8 @@ function resetGame() {
   if (music && !music.paused) music.volume = 0.6;
   $('#hint').textContent = HINT;
   $('#main').scrollIntoView({ behavior: 'smooth' });
+  // Mulai kembali render panah saat diulang
+  running = true; last = performance.now(); requestAnimationFrame(loop);
 }
 
 /* ============ Alur halaman ============ */

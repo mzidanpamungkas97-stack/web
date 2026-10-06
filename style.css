@@ -41,13 +41,13 @@ h2{font-size:clamp(1.8rem,6vw,2.6rem)}
 #game{width:min(100%,900px);height:min(62svh,520px);touch-action:none;cursor:grab;border-radius:24px;
   background:#ffffff80;box-shadow:0 10px 40px #c77dff33}
 
-/* Video: Modal Layar & Cinema Card Besar */
+/* Video: Modal Layar & Cinema Card Besar (Dioptimalkan tanpa backdrop-filter agar HP super lancar) */
 .modal{position:fixed;inset:0;z-index:60;display:none;flex-direction:column;align-items:center;justify-content:center;
-  padding:16px 12px;background:rgba(20,5,16,0.92);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);overflow-y:auto}
+  padding:16px 12px;background:rgba(18,5,15,0.96);overflow-y:auto}
 .modal.show{display:flex;animation:modalFadeIn .3s ease-out both}
 @keyframes modalFadeIn{from{opacity:0}to{opacity:1}}
 
-.pol{position:relative;background:#fffffff8;
+.pol{position:relative;background:#ffffff;
   padding:22px 18px 18px;border-radius:24px;width:min(96vw,920px);max-height:94vh;
   box-shadow:0 20px 60px rgba(0,0,0,0.5),0 0 40px rgba(255,92,147,0.35);border:2px solid rgba(255,255,255,0.95);
   display:flex;flex-direction:column;align-items:center;animation:cinemaPopIn .35s cubic-bezier(.16,1,.3,1) both;
@@ -124,7 +124,7 @@ video{width:100%;height:100%;object-fit:contain;background:#000;display:block;bo
 #fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:50}
 
 @media (max-width: 640px){
-  .modal{padding:10px 8px;background:rgba(18,5,15,0.95);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+  .modal{padding:10px 8px;background:rgba(18,5,15,0.98)}
   .pol{padding:16px 10px 14px;border-radius:18px;max-height:96vh;width:98vw}
   .vw{max-height:56vh;border-radius:12px}
   video{border-radius:12px}
