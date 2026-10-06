@@ -146,6 +146,14 @@ function drawSparkleStar(c, s, col) {
 
 // Loop render partikel
 function tick() {
+  // Di ponsel saat video kenangan sedang diputar, tunda render partikel agar GPU 100% lancar memutar video
+  const v = document.getElementById('vid');
+  if (v && !v.paused && !v.ended && innerWidth < 768) {
+    fc.clearRect(0, 0, innerWidth, innerHeight);
+    fxRun = false;
+    return;
+  }
+
   fc.setTransform(DPR, 0, 0, DPR, 0, 0);
   fc.clearRect(0, 0, innerWidth, innerHeight);
   P = P.filter(p => p.l > 0 && p.y < innerHeight + 80 && p.x > -100 && p.x < innerWidth + 100);
@@ -229,53 +237,57 @@ function confetti() {
 let flowerRainTimer = null;
 
 function flowerScreenBlast(hitX, hitY) {
-  // 1. Ledakan radial dari titik sasaran hati (100 partikel bunga & kelopak melesat keluar)
-  for (let i = 0; i < 100; i++) {
+  const isMobile = innerWidth < 768;
+  const countRadial = isMobile ? 36 : 90;
+  const countRain = isMobile ? 30 : 100;
+
+  // 1. Ledakan radial dari titik sasaran hati
+  for (let i = 0; i < countRadial; i++) {
     const angle = rnd(0, 6.283);
-    const speed = rnd(5, 19);
+    const speed = rnd(4, isMobile ? 12 : 18);
     const pal = FLOWER_PALETTES[Math.random() * FLOWER_PALETTES.length | 0];
     const rollType = Math.random();
     let k = 'petal_sakura';
-    let s = rnd(14, 26);
-    if (rollType < 0.35) { k = 'flower'; s = rnd(18, 36); }
-    else if (rollType < 0.70) { k = 'petal_rose'; s = rnd(14, 26); }
-    else if (rollType < 0.88) { k = 'sparkle'; s = rnd(10, 18); }
-    else { k = 'heart'; s = rnd(10, 20); }
+    let s = rnd(12, 22);
+    if (rollType < 0.35) { k = 'flower'; s = rnd(16, 28); }
+    else if (rollType < 0.70) { k = 'petal_rose'; s = rnd(12, 22); }
+    else if (rollType < 0.88) { k = 'sparkle'; s = rnd(8, 14); }
+    else { k = 'heart'; s = rnd(10, 18); }
 
     P.push({
       x: hitX, y: hitY,
       vx: Math.cos(angle) * speed,
-      vy: Math.sin(angle) * speed - rnd(1, 4),
+      vy: Math.sin(angle) * speed - rnd(1, 3),
       s, r: rnd(0, 6), vr: rnd(-.15, .15),
       pitch: rnd(0, 6), vPitch: rnd(-.1, .1),
       roll: rnd(0, 6), vRoll: rnd(-.1, .1),
-      wobble: rnd(0, 6), vWobble: rnd(.03, .07), wAmp: rnd(1, 2.5),
-      l: 1, decay: rnd(.004, .008), g: rnd(.05, .12), drag: rnd(.97, .985),
+      wobble: rnd(0, 6), vWobble: rnd(.03, .07), wAmp: rnd(1, 2),
+      l: 1, decay: rnd(.006, .012), g: rnd(.05, .1), drag: rnd(.97, .985),
       k, pal, c: pal.c1
     });
   }
 
-  // 2. Hujan bunga langsung menyebar & memenuhi seluruh layar
-  for (let i = 0; i < 120; i++) {
+  // 2. Hujan bunga langsung menyebar ke seluruh layar
+  for (let i = 0; i < countRain; i++) {
     const pal = FLOWER_PALETTES[Math.random() * FLOWER_PALETTES.length | 0];
     const rollType = Math.random();
     let k = 'petal_sakura';
-    let s = rnd(12, 28);
-    if (rollType < 0.4) { k = 'flower'; s = rnd(18, 38); }
-    else if (rollType < 0.75) { k = 'petal_rose'; s = rnd(14, 28); }
-    else if (rollType < 0.9) { k = 'sparkle'; s = rnd(8, 16); }
-    else { k = 'heart'; s = rnd(10, 20); }
+    let s = rnd(12, 24);
+    if (rollType < 0.4) { k = 'flower'; s = rnd(16, 30); }
+    else if (rollType < 0.75) { k = 'petal_rose'; s = rnd(12, 24); }
+    else if (rollType < 0.9) { k = 'sparkle'; s = rnd(8, 14); }
+    else { k = 'heart'; s = rnd(10, 18); }
 
     P.push({
       x: rnd(0, innerWidth),
-      y: rnd(-80, innerHeight * 0.75),
-      vx: rnd(-2.5, 2.5),
-      vy: rnd(1.5, 4.5),
+      y: rnd(-60, innerHeight * 0.7),
+      vx: rnd(-2, 2),
+      vy: rnd(1.5, 3.8),
       s, r: rnd(0, 6), vr: rnd(-.08, .08),
       pitch: rnd(0, 6), vPitch: rnd(-.08, .08),
       roll: rnd(0, 6), vRoll: rnd(-.08, .08),
-      wobble: rnd(0, 6), vWobble: rnd(.02, .05), wAmp: rnd(1.2, 3),
-      l: 1, decay: rnd(.003, .006), g: rnd(.03, .07), drag: .99,
+      wobble: rnd(0, 6), vWobble: rnd(.02, .05), wAmp: rnd(1, 2.2),
+      l: 1, decay: rnd(.004, .008), g: rnd(.03, .06), drag: .99,
       k, pal, c: pal.c1
     });
   }
@@ -283,30 +295,32 @@ function flowerScreenBlast(hitX, hitY) {
   ensureFxRun();
 }
 
-// Hujan bunga berkala saat modal video aktif
+// Hujan bunga saat modal video aktif (dioptimalkan agar handphone tidak lag)
 function startSustainedFlowerRain() {
   stopSustainedFlowerRain();
+  // Di layar ponsel, matikan loop partikel berkelanjutan saat video agar GPU fokus 100% memutar video tanpa jeda/freeze
+  if (innerWidth < 768) return;
   flowerRainTimer = setInterval(() => {
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 2; i++) {
       const pal = FLOWER_PALETTES[Math.random() * FLOWER_PALETTES.length | 0];
       const isFlower = Math.random() < 0.35;
       P.push({
         x: rnd(0, innerWidth),
         y: -30,
-        vx: rnd(-1.5, 1.5),
-        vy: rnd(1.8, 3.8),
-        s: isFlower ? rnd(18, 32) : rnd(12, 24),
-        r: rnd(0, 6), vr: rnd(-.06, .06),
-        pitch: rnd(0, 6), vPitch: rnd(-.08, .08),
-        roll: rnd(0, 6), vRoll: rnd(-.08, .08),
-        wobble: rnd(0, 6), vWobble: rnd(.02, .05), wAmp: rnd(1.5, 3),
-        l: 1, decay: rnd(.003, .005), g: rnd(.03, .06), drag: .992,
+        vx: rnd(-1.2, 1.2),
+        vy: rnd(1.6, 3.2),
+        s: isFlower ? rnd(16, 26) : rnd(10, 20),
+        r: rnd(0, 6), vr: rnd(-.05, .05),
+        pitch: rnd(0, 6), vPitch: rnd(-.06, .06),
+        roll: rnd(0, 6), vRoll: rnd(-.06, .06),
+        wobble: rnd(0, 6), vWobble: rnd(.02, .04), wAmp: rnd(1.2, 2.5),
+        l: 1, decay: rnd(.003, .006), g: rnd(.03, .05), drag: .992,
         k: isFlower ? 'flower' : (Math.random() < 0.5 ? 'petal_sakura' : 'petal_rose'),
         pal, c: pal.c1
       });
     }
     ensureFxRun();
-  }, 180);
+  }, 350);
 }
 
 function stopSustainedFlowerRain() {
@@ -343,14 +357,46 @@ music.onpause = () => mbtn.classList.remove('on');
 music.onerror = () => { $('#mt').textContent = '🎵 (taruh lagu di ' + CFG.musik + ')'; };
 mbtn.onclick = () => music.paused ? music.play().catch(() => { }) : music.pause();
 
-/* ============ Video kenangan & ucapan ============ */
+/* ============ Video kenangan & ucapan (Audio Gain Boost & Optimasi Ponsel) ============ */
 const vid = $('#vid'), vph = $('#vph'), playBtn = $('#play');
+const vidPlayOverlay = $('#vid-play-overlay'), vidSpinner = $('#vid-spinner');
 
-// Placeholder jika file belum ada
+// Web Audio API Gain Booster (Menaikkan gain suara video)
+let audioCtx = null;
+let videoGainNode = null;
+let videoSourceNode = null;
+
+function setupVideoAudioGain() {
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    if (!audioCtx) {
+      audioCtx = new AudioCtx();
+    }
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume().catch(() => {});
+    }
+    if (!videoSourceNode && vid) {
+      videoSourceNode = audioCtx.createMediaElementSource(vid);
+      videoGainNode = audioCtx.createGain();
+      // Gain boost 1.4x (+3 dB tambahan pada browser untuk suara lantang & jernih)
+      videoGainNode.gain.value = 1.4;
+      videoSourceNode.connect(videoGainNode);
+      videoGainNode.connect(audioCtx.destination);
+    }
+  } catch (err) {
+    // Tetap berjalan dengan audio standar jika browser membatasi perutean audio media
+    console.info('Audio gain fallback ke output standar:', err);
+  }
+}
+
+// Placeholder jika file video belum ada
 vid.onerror = () => {
   vid.hidden = true;
   vph.hidden = false;
   playBtn.hidden = true;
+  if (vidPlayOverlay) vidPlayOverlay.classList.add('hidden');
+  if (vidSpinner) vidSpinner.hidden = true;
 };
 
 // Pasang video sumber dari konfigurasi
@@ -368,55 +414,97 @@ if (vidFileInput) {
       vph.hidden = true;
       playBtn.hidden = true;
       vid.currentTime = 0;
+      setupVideoAudioGain();
       vid.play().then(() => {
-        if (music && !music.paused) music.volume = 0.1;
+        if (music && !music.paused) music.volume = 0.05;
       }).catch(() => {
         playBtn.hidden = false;
+        if (vidPlayOverlay) vidPlayOverlay.classList.remove('hidden');
       });
     }
   };
 }
 
-playBtn.onclick = () => {
-  vid.play().then(() => {
-    playBtn.hidden = true;
-    if (music && !music.paused) music.volume = 0.1;
-  }).catch(() => { });
+function handlePlayVideo() {
+  setupVideoAudioGain();
+  if (audioCtx && audioCtx.state === 'suspended') {
+    audioCtx.resume().catch(() => {});
+  }
+  const p = vid.play();
+  if (p !== undefined) {
+    p.then(() => {
+      playBtn.hidden = true;
+      if (vidPlayOverlay) vidPlayOverlay.classList.add('hidden');
+      if (music && !music.paused) music.volume = 0.05;
+    }).catch(err => {
+      console.warn('Pemutaran video membutuhkan sentuhan:', err);
+      playBtn.hidden = false;
+      if (vidPlayOverlay) vidPlayOverlay.classList.remove('hidden');
+    });
+  }
+}
+
+playBtn.onclick = handlePlayVideo;
+if (vidPlayOverlay) vidPlayOverlay.onclick = handlePlayVideo;
+
+// Indikator buffering / loading di handphone
+vid.onwaiting = () => { if (vidSpinner) vidSpinner.hidden = false; };
+vid.onseeking = () => { if (vidSpinner) vidSpinner.hidden = false; };
+vid.oncanplay = () => { if (vidSpinner) vidSpinner.hidden = true; };
+
+vid.onplaying = () => {
+  if (vidSpinner) vidSpinner.hidden = true;
+  if (vidPlayOverlay) vidPlayOverlay.classList.add('hidden');
+  playBtn.hidden = true;
+  if (music && !music.paused) music.volume = 0.05;
 };
 
 vid.onplay = () => {
+  stopSustainedFlowerRain();
+  setupVideoAudioGain();
   playBtn.hidden = true;
-  if (music && !music.paused) music.volume = 0.1; // kecilkan musik agar suara video terdengar jelas
+  if (vidPlayOverlay) vidPlayOverlay.classList.add('hidden');
+  if (music && !music.paused) music.volume = 0.05; // kecilkan musik latar agar ucapan video terdengar jelas & lantang
 };
 
 vid.onpause = () => {
-  if (!vid.ended && !vid.error) playBtn.hidden = false;
+  if (!vid.ended && !vid.error) {
+    playBtn.hidden = false;
+    if (vidPlayOverlay) vidPlayOverlay.classList.remove('hidden');
+  }
   if (music && !music.paused) music.volume = 0.6;
+  ensureFxRun();
 };
 
 vid.onended = () => {
   playBtn.hidden = false;
   playBtn.textContent = 'Putar Ulang Video ↺';
+  if (vidPlayOverlay) vidPlayOverlay.classList.remove('hidden');
   if (music && !music.paused) music.volume = 0.6;
+  ensureFxRun();
 };
 
-// TAMPILKAN MODAL VIDEO SECARA LANGSUNG TANPA JEDA
+// TAMPILKAN MODAL VIDEO SECARA LANGSUNG
 function showVideoModal() {
   const mem = $('#mem');
   mem.classList.add('show');
   startSustainedFlowerRain();
 
-  // Langsung putar video tanpa menunggu klik tombol
+  // Langsung putar video dengan boost audio
   if (vid) {
     vid.currentTime = 0;
+    setupVideoAudioGain();
     const playPromise = vid.play();
     if (playPromise !== undefined) {
       playPromise.then(() => {
         playBtn.hidden = true;
-        if (music && !music.paused) music.volume = 0.1;
+        if (vidPlayOverlay) vidPlayOverlay.classList.add('hidden');
+        if (music && !music.paused) music.volume = 0.05;
       }).catch(err => {
-        console.warn('Autoplay video dicegah oleh browser:', err);
+        // Pada sebagian handphone autoplay tertahan aturan browser, sediakan tombol play yang mudah disentuh
+        console.warn('Autoplay dicegah browser, siap disentuh:', err);
         playBtn.hidden = false;
+        if (vidPlayOverlay) vidPlayOverlay.classList.remove('hidden');
       });
     }
   }

@@ -40,9 +40,13 @@
   <!-- 3. Video kenangan & ucapan (muncul langsung setelah panah kena target) -->
   <div id="mem" class="modal" role="dialog" aria-modal="true" aria-label="Vidio Ucapan Ulang Tahun">
     <div class="pol">
-      <div class="pol-badge">🎬 Vidio Spesial Untukmu 💖</div>
-      <div class="vw">
-        <video id="vid" controls playsinline preload="auto"></video>
+      <div class="pol-badge">🎬 Vidio Spesial Untukmu 💖 <span class="audio-badge">🔊 Audio Boosted</span></div>
+      <div class="vw" id="vw">
+        <video id="vid" controls playsinline webkit-playsinline x5-playsinline preload="metadata"></video>
+        <div id="vid-spinner" class="vid-spinner" hidden></div>
+        <button id="vid-play-overlay" class="vid-play-overlay" aria-label="Putar Video">
+          <span class="vid-play-icon">▶</span>
+        </button>
         <div id="vph" class="ph" hidden>
           <div class="vph-content">
             <div class="vph-icon">🎥✨</div>
